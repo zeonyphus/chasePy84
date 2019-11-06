@@ -1,20 +1,26 @@
 from random import seed
 from random import randint
 from math import ceil
+from enum import Enum
 
 seed(1)
+
 
 # todo give everything randomness, this will make cheesing the game harder
 class Car:
     def __init__(self, speed=0):
+        class dodge(Enum):
+            LOW = 1
+            MID = 2
+            HIGH = 3
         self.speed = speed
-        self.dodge = False
+        self.dodge = dodge.LOW
         self.odometer = 0
         self.time = 0
         self.timeRemaining = 80
         self.fuel = 12000  # randint(12000, 25000)
         self.distance = 4000  # randint(5000, 1000)
-        self.speedLimit = 80  # randint(12, 14) * 5
+        self.speedLimit = 80  # randint(14, 18) * 5
 
     def say_state(self):
         print("Current speed: {} kph".format(self.speed))
@@ -32,11 +38,11 @@ class Car:
         self.odometer += self.speed
         self.time += 1
         if self.speed <= self.speedLimit:
-            self.fuel -= ceil((self.speed ** 2) /10)
-            print("DIFF:", (self.speed ** 2) /10)
+            self.fuel -= ceil((self.speed ** 2) / 10)
+            # print("DIFF:", (self.speed ** 2) / 10)
         else:
             self.fuel -= ceil((((self.speed ** 2) / 10) - ((self.speed - self.speedLimit) ** 1.8)))
-            print("DIFF:", (((self.speed ** 2) / 10) - ((self.speed - self.speedLimit) ** 1.8)))
+            # print("DIFF:", (((self.speed ** 2) / 10) - ((self.speed - self.speedLimit) ** 1.8)))
         self.distance -= self.speed
         self.timeRemaining -= 1
 
@@ -55,7 +61,7 @@ class Car:
 
 
 if __name__ == '__main__':
-    my_car = Car(40)  # (randint(1, 8) * 5)
+    my_car = Car(randint(6, 12) * 5)
     infractionCount = 3
     dodgeCount = 0
     loss = True
@@ -77,6 +83,7 @@ if __name__ == '__main__':
             continue
         if action == 'A':
             my_car.accelerate()
+            my_car.set_dodge(my_car.dodge.MID)
         elif action == 'B':
             my_car.brake()
         elif action == 'C':
@@ -84,15 +91,20 @@ if __name__ == '__main__':
             print("You still have {} kilometers to go".format(my_car.distance))
         # todo make stops infrequent
         elif action == 'S':
-            my_car.add_fuel(8000)  # randint(3000, 12000)
-            my_car.set_speed(0)
-            print("You have stopped for fuel. You now have {} litres of fuel".format(my_car.fuel))
+            if randint(1, 3) > 1:
+                newFuel = randint(6000, 10000)
+                my_car.add_fuel(newFuel)  # randint(3000, 12000)
+                my_car.set_speed(0)
+                print("You have stopped for fuel. You now have added {} liters of fuel".format(newFuel))
+                print("You now have {} liters of fuel".format(my_car.fuel))
+            else:
+                print("You could not find any gas.")
         elif action == 'W':
             pass
         elif action == 'D':
-            my_car.set_dodge(True)
-        if action != 'D':
-            my_car.set_dodge(False)
+            my_car.set_dodge(my_car.dodge.HIGH)
+        if action != 'D' and action != 'A':
+            my_car.set_dodge(my_car.dodge.HIGH)
         if my_car.timeRemaining <= 0 < my_car.distance:
             print("You ran out of time, there are too many pursuers now")
             reason = "Failed to get away in time"
@@ -103,28 +115,37 @@ if __name__ == '__main__':
                 print("You were captured since you ran out of fuel")
             reason = "Ran out of fuel and was captured"
             break
-        # todo add failure cases for time and distance
         elif my_car.speed > 80 and infractionCount > 0:
             infractionCount -= 1
             print("Slow down or you will be detained! You have {} violations before being pursued".format(
                 infractionCount))
         elif infractionCount == 0:
             pursued = True
-            if dodgeCount > 3 and my_car.speed >= my_car.speedLimit + 5:  # todo make random
+            if dodgeCount >= randint(2, 5) and my_car.speed > my_car.speedLimit:  # todo make random
                 pursued = False
                 infractionCount = 3
                 dodgeCount = 0
-                print("You have dodged the pursuers! Don't get caught speeding again or you will be pursed again!")
+                print("You have dodged the pursuers! Don't get caught speeding or you will be pursed again!")
             # todo make high chance of dodge but still random
-            elif my_car.check_dodge():
-                print("|||You are being pursed!|||")
-                dodgeCount += 1
-                print("You have dodged the pursuers {} times! Keep dodging to escape!".format(dodgeCount))
+            elif my_car.check_dodge() == my_car.dodge.HIGH:
+                if randint(1,20) > 1:
+                    print("|||You are being pursed!|||")
+                    dodgeCount += 1
+                    print("You have dodged the pursuers {} times! Keep dodging to escape!".format(dodgeCount))
+                else:
+                    print("Your dodge failed!")
+                    reason = "Dodge failed, caught anyway"
+                    break
             # todo make mid-low chance of dodge on acceleration
-            elif dodgeCount % 3 == 0:
-                print("|||You are being pursued!|||")
-                dodgeCount += 1
-                print("You have dodged the pursuers {} times! Keep dodging to escape!".format(dodgeCount))
+            elif my_car.check_dodge() == my_car.dodge.MID and dodgeCount % randint(2, 3) == 0:
+                if randint(1, 8) > 1:
+                    print("|||You are being pursued!|||")
+                    dodgeCount += 1
+                    print("You have dodged the pursuers {} times! Keep dodging to escape!".format(dodgeCount))
+                else:
+                    print("Your dodge failed!")
+                    reason = "Dodge failed, caught anyway"
+                    break
             else:
                 print("Too many violations! You have been caught!!!")
                 my_car.set_speed(0)
@@ -143,7 +164,11 @@ if __name__ == '__main__':
     print("Distance Remaining: {}".format(my_car.distance))
     print("Fuel Remaining: {}".format(my_car.fuel))
     print("Time Remaining: {}".format(my_car.timeRemaining))
-    # print("Number of dodges performed: {}".format(dodgeCount))
+    print("Time taken: {}".format(my_car.time))
+    # print("Number of dodges performed: {}".format())
+    # fuel used
+    # time taken
+    # stops made
     if loss:
         print("Reason for loss:", reason)
         print("GAME OVER")
