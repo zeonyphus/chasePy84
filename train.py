@@ -3,7 +3,7 @@ from random import randint
 from math import ceil
 from enum import Enum
 
-seed(1)
+# seed(1)  # this seed will make the program run the same way every time, totally random if commented out
 
 
 # todo give everything randomness, this will make cheesing the game harder
@@ -18,9 +18,9 @@ class Car:
         self.odometer = 0
         self.time = 0
         self.timeRemaining = 80
-        self.fuel = 12000  # randint(12000, 25000)
-        self.distance = 4000  # randint(5000, 1000)
-        self.speedLimit = 80  # randint(14, 18) * 5
+        self.fuel = randint(10000, 20000)
+        self.distance = randint(2500, 5000)
+        self.speedLimit = randint(14, 18) * 5
 
     def say_state(self):
         print("Current speed: {} kph".format(self.speed))
@@ -33,7 +33,7 @@ class Car:
     def brake(self):
         self.speed -= 5
 
-    # todo need to make the step not give positive fuel, at least within reason, say when the cops are more random
+    # todo it gives positive after a while, but its kinda hard to get there
     def step(self):
         self.odometer += self.speed
         self.time += 1
@@ -89,7 +89,6 @@ if __name__ == '__main__':
         elif action == 'C':
             print("The car has driven {} kilometers".format(my_car.odometer))
             print("You still have {} kilometers to go".format(my_car.distance))
-        # todo make stops infrequent
         elif action == 'S':
             if randint(1, 3) > 1:
                 newFuel = randint(6000, 10000)
@@ -98,7 +97,7 @@ if __name__ == '__main__':
                 print("You have stopped for fuel. You now have added {} liters of fuel".format(newFuel))
                 print("You now have {} liters of fuel".format(my_car.fuel))
             else:
-                print("You could not find any gas.")
+                print("You could not find any fuel.")
         elif action == 'W':
             pass
         elif action == 'D':
@@ -121,14 +120,13 @@ if __name__ == '__main__':
                 infractionCount))
         elif infractionCount == 0:
             pursued = True
-            if dodgeCount >= randint(2, 5) and my_car.speed > my_car.speedLimit:  # todo make random
+            if dodgeCount >= randint(2, 5) and my_car.speed > my_car.speedLimit:
                 pursued = False
                 infractionCount = 3
                 dodgeCount = 0
                 print("You have dodged the pursuers! Don't get caught speeding or you will be pursed again!")
-            # todo make high chance of dodge but still random
             elif my_car.check_dodge() == my_car.dodge.HIGH:
-                if randint(1,20) > 1:
+                if randint(1, 50) > 1:
                     print("|||You are being pursed!|||")
                     dodgeCount += 1
                     print("You have dodged the pursuers {} times! Keep dodging to escape!".format(dodgeCount))
@@ -136,7 +134,6 @@ if __name__ == '__main__':
                     print("Your dodge failed!")
                     reason = "Dodge failed, caught anyway"
                     break
-            # todo make mid-low chance of dodge on acceleration
             elif my_car.check_dodge() == my_car.dodge.MID and dodgeCount % randint(2, 3) == 0:
                 if randint(1, 8) > 1:
                     print("|||You are being pursued!|||")
@@ -159,6 +156,7 @@ if __name__ == '__main__':
             break
         my_car.step()
         my_car.say_state()
+    # todo add more stats at the end of the game
     print("~~~~~~~~~~Final Stats~~~~~~~~~~")
     print("Distance Traveled: {}".format(my_car.odometer))
     print("Distance Remaining: {}".format(my_car.distance))
