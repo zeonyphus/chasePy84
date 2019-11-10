@@ -33,7 +33,6 @@ class Car:
     def brake(self):
         self.speed -= 5
 
-    # todo it gives positive after a while, but its kinda hard to get there
     def step(self):
         self.odometer += self.speed
         self.time += 1
@@ -41,6 +40,7 @@ class Car:
             self.fuel -= ceil((self.speed ** 2) / 10)
             # print("DIFF:", (self.speed ** 2) / 10)
         else:
+            # todo it gives positive after a while, and is still kinda easy to add more fuel
             self.fuel -= ceil((((self.speed ** 2) / 10) - ((self.speed - self.speedLimit) ** 1.8)))
             # print("DIFF:", (((self.speed ** 2) / 10) - ((self.speed - self.speedLimit) ** 1.8)))
         self.distance -= self.speed
